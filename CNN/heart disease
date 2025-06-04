@@ -1,1 +1,68 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
 
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import classification_report, confusion_matrix, ConfusionMatrixDisplay, accuracy_score
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.svm import SVC
+
+# Load the dataset
+df = pd.read_csv("/content/heart (1).csv")
+
+# Display the first few rows
+df.head()
+# Check dataset info
+df.info()
+# Summary statistics
+df.describe()
+# Check for missing values
+df.isnull().sum()
+# Visualize class distribution
+sns.countplot(data=df, x='target')
+plt.title("Distribution of Target Variable")
+plt.show()
+# Feature and Target Separation
+X = df.drop("target", axis=1)
+y = df["target"]
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+scaler = StandardScaler()
+X_train_scaled = scaler.fit_transform(X_train)
+X_test_scaled = scaler.transform(X_test)
+knn = KNeighborsClassifier(n_neighbors=5)
+knn.fit(X_train_scaled, y_train)
+y_pred_knn = knn.predict(X_test_scaled)
+print("KNN Accuracy:", accuracy_score(y_test, y_pred_knn))
+print("KNN Classification Report:\n", classification_report(y_test, y_pred_knn))
+svm = SVC(kernel='rbf', probability=True)
+svm.fit(X_train_scaled, y_train)
+y_pred_svm = svm.predict(X_test_scaled)
+print("SVM Accuracy:", accuracy_score(y_test, y_pred_svm))
+print("SVM Classification Report:\n", classification_report(y_test, y_pred_svm))
+cm_knn = confusion_matrix(y_test, y_pred_knn)
+cm_svm = confusion_matrix(y_test, y_pred_svm)
+
+fig, ax = plt.subplots(1, 2, figsize=(10, 4))
+
+# KNN
+ax[0].set_title('KNN Confusion Matrix')
+ax[0].set_xlabel('Predicted')
+ax[0].set_ylabel('Actual')
+for i in range(2):
+    for j in range(2):
+        ax[0].text(j, i, cm_knn[i,j], ha='center', va='center', fontsize=12, bbox=dict(boxstyle='round', facecolor='white'))
+ax[0].imshow(cm_knn, cmap='gray')
+
+# SVM
+ax[1].set_title('SVM Confusion Matrix')
+ax[1].set_xlabel('Predicted')
+ax[1].set_ylabel('Actual')
+for i in range(2):
+    for j in range(2):
+        ax[1].text(j, i, cm_svm[i,j], ha='center', va='center', fontsize=12, bbox=dict(boxstyle='round', facecolor='white'))
+ax[1].imshow(cm_svm, cmap='gray')
+
+plt.tight_layout()
+plt.show()
